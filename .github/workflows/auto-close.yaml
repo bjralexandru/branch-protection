@@ -1,0 +1,36 @@
+name: Close PRs from Other Branches
+
+on:
+  pull_request:
+   branches:
+    - 'stage'
+    - 'prod' 
+
+jobs:
+  close_pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Debugging refs 
+        run: |-
+          echo base ${{ github.base_ref }}
+          echo head ${{ github.head_ref }}
+          
+      - name: Check PR branch
+        if: ${{ github.head_ref == 'stage' }}
+        run: |
+          PR_BRANCH=$(jq -r ".pull_request.base.ref" "$GITHUB_EVENT_PATH")
+          ALLOWED_BRANCH="dev"
+
+          if [ "$PR_BRANCH" != "$ALLOWED_BRANCH" ]; then
+            echo "Closing PR because it is not from $ALLOWED_BRANCH branch"
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"state\":\"closed\"}" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
+          else
+            echo "PR is from the $ALLOWED_BRANCH branch. No action required."
+          fi
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
