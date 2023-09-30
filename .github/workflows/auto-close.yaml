@@ -21,11 +21,13 @@ jobs:
         run: |
           if [ ${{ github.head_ref }} != "dev" ]; then
             echo "Closing PR because it is not from DEV"
-            curl -X POST \
+            curl -L \
+              -X PATCH \
+              -H "Accept: application/vnd.github+json" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              -d "{\"state\":\"closed\"}" \
-              "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+              -d '{"title":"Forbidden PR","body":"PRs from feature branches is forbidden","state":"closed","base":"${{github.base_ref}}"}'
           else
             echo "PR is from the DEV branch. No action required."
           fi
