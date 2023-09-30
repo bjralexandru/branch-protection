@@ -17,13 +17,10 @@ jobs:
           echo head ${{ github.head_ref }}
 
       - name: Check PR branch
-        if: ${{ github.base_ref == 'stage' }}
+        if: ${{ github.base_ref == 'stage' && github.head_ref != 'dev'}}
         run: |
-          if [ ${{ github.head_ref }} != "dev" ]; then
             echo "Closing PR because it is not from DEV"
             gh pr close $PR_NUMBER --repo $GITHUB_REPOSITORY
-          else
-            echo "PR is from the DEV branch. No action required."
-          fi
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
